@@ -17,7 +17,7 @@ The current release is complete as a software-first, hybrid-ready project:
 - Mock telemetry overlay
 - Telemetry CSV import with template export
 - `/api/grid-signal` virtual and official-data-ready grid signal
-- Provider model for EPİAŞ, ENTSO-E, Electricity Maps, and Ember
+- Provider model for EPIAS, ENTSO-E, Electricity Maps, and Ember
 - Source status metadata for refresh cadence, granularity, credential names, and source documentation
 - `/api/telemetry` measured-vs-simulated comparison
 - `/api/report` Markdown engineering report export
@@ -36,7 +36,7 @@ The current release is complete as a software-first, hybrid-ready project:
 
 ## v2 live data and optional hardware
 
-- Live EPİAŞ data adapter
+- Live EPIAS data adapter
 - Electricity Maps carbon-intensity adapter
 - ESP32 HTTP sample sender
 - MQTT bridge example

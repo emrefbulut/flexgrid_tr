@@ -4,7 +4,7 @@
 
 VoltPilot is a pre-hardware grid-readiness cockpit that analyzes EV charging, flexible building loads, battery support, virtual grid signals, and transformer loading in one workflow.
 
-The project runs without physical hardware. It still includes an EPİAŞ/ENTSO-E/Electricity Maps/Ember-ready virtual data layer, telemetry CSV import, a `POST /api/telemetry` endpoint for measured-vs-simulated comparison, and downloadable engineering report output. Future ESP32, MQTT bridge, or smart-plug data can be connected to the same contract.
+The project runs without physical hardware. It still includes an EPIAS/ENTSO-E/Electricity Maps/Ember-ready virtual data layer, telemetry CSV import, a `POST /api/telemetry` endpoint for measured-vs-simulated comparison, and downloadable engineering report output. Future ESP32, MQTT bridge, or smart-plug data can be connected to the same contract.
 
 ## Problem
 
@@ -40,7 +40,7 @@ Built VoltPilot, a pre-hardware grid-readiness cockpit that combines max-safe EV
 - Uses electrical and electronics engineering metrics directly: `kW`, `kVA`, current, power factor, and transformer loading.
 - It is not only a visual dashboard; it has a tested simulation core and API layer.
 - Its differentiator is the Readiness Passport: a pre-hardware decision artifact that says how many EV sessions are safe, where risk begins, and what upgrade path is needed.
-- Demonstrates an EPİAŞ/ENTSO-E/Electricity Maps/Ember-compatible data architecture without physical hardware.
+- Demonstrates an EPIAS/ENTSO-E/Electricity Maps/Ember-compatible data architecture without physical hardware.
 - Includes a lightweight optimizer for peak shaving, tariff exposure, transformer headroom, and battery dispatch.
 - Can be shown without buying hardware, while the future hardware boundary is already designed.
 - Works as a readable, runnable, and extendable GitHub portfolio project.

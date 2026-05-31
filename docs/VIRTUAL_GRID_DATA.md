@@ -16,7 +16,7 @@ Physical measurement introduces cost, safety, calibration, and site-access const
 `/api/grid-signal` accepts these provider IDs:
 
 - `demo`: Keyless deterministic 24-hour grid signal for Turkey.
-- `epias`: EPİAŞ Transparency Platform adapter target for official Turkish electricity data.
+- `epias`: EPIAS Transparency Platform adapter target for official Turkish electricity data.
 - `entsoe`: ENTSO-E Transparency Platform adapter target for European power-system data.
 - `electricity-maps`: Adapter target for carbon intensity, electricity mix, load, and price signals.
 - `ember`: Adapter target for monthly and yearly country-level demand, generation, emissions, and carbon intensity data.
@@ -47,7 +47,7 @@ The cockpit also exposes provider metadata beside the chart:
 
 ## Official and Institutional Sources
 
-- EPİAŞ Transparency Platform technical documentation lists REST services for Turkish electricity data: https://seffaflik-prp.epias.com.tr/electricity-service/technical/tr/index.html
+- EPIAS Transparency Platform technical documentation lists REST services for Turkish electricity data: https://seffaflik-prp.epias.com.tr/electricity-service/technical/tr/index.html
 - ENTSO-E Transparency Platform is the central platform for European electricity market and system-transparency data: https://transparency.entsoe.eu/
 - Electricity Maps API provides optional commercial/API access for carbon intensity, electricity mix, renewable share, load, and price signals: https://portal.electricitymaps.com/docs/api
 - Ember API provides open electricity datasets for demand, generation, emissions, and carbon intensity: https://ember-energy.org/data/api/
@@ -58,7 +58,7 @@ The current application does not poll live external APIs. `demo` data is generat
 
 Live adapter refresh should be configured per provider and per dataset:
 
-- `epias`: EPİAŞ is the primary Turkish official-data target. Its published datasets are tied to market and transparency processes, so the cadence is dataset-specific rather than one global interval.
+- `epias`: EPIAS is the primary Turkish official-data target. Its published datasets are tied to market and transparency processes, so the cadence is dataset-specific rather than one global interval.
 - `entsoe`: ENTSO-E Transparency Platform publishes many data items through REST API, file extracts, subscriptions, web services, and ECP. Resolution and publication timing depend on the selected data item.
 - `electricity-maps`: Electricity Maps API defaults to hourly temporal granularity and supports 5-minute, 15-minute, hourly, daily, monthly, quarterly, and yearly granularities where the endpoint supports them.
 - `ember`: Ember Monthly Electricity Data is updated twice per month, once in the first week and once in the third week.
@@ -72,7 +72,7 @@ These data sources are not building-meter measurements. They provide national, r
 ## Hardware Path
 
 1. Complete UI, API, and tests with the virtual demo signal.
-2. Fill one of the EPİAŞ, ENTSO-E, Electricity Maps, or Ember adapters with live data.
+2. Fill one of the EPIAS, ENTSO-E, Electricity Maps, or Ember adapters with live data.
 3. Connect smart-plug or ESP32 measurements to the `/api/telemetry` contract.
 4. Import CSV telemetry directly in the cockpit when hardware is not available.
 5. Track measured-vs-simulated difference through MAE, peak error, energy delta, and confidence score.

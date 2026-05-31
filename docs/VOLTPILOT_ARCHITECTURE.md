@@ -8,7 +8,7 @@ flowchart LR
     B --> R["Readiness Passport\nMax safe EV, first risk, upgrade target"]
     B --> C["Operator cockpit\nSaved scenarios, charts, report, CSV import"]
     R --> C
-    G["Virtual grid signal\nEPİAŞ, ENTSO-E, Electricity Maps, Ember adapters"] --> C
+    G["Virtual grid signal\nEPIAS, ENTSO-E, Electricity Maps, Ember adapters"] --> C
     G --> D["Grid signal API\n24h load, price, carbon, risk"]
     B --> E["Scenario API\nJSON and CSV"]
     B --> F["Telemetry comparison\nMock or measured samples"]
@@ -21,7 +21,7 @@ flowchart LR
 - The UI owns interaction state: selected scenario, saved local scenarios, shareable URL parameters, and mock telemetry display.
 - The simulation engine owns engineering truth: load profile generation, battery behavior, transformer loading, cost, carbon, and confidence scoring.
 - The readiness layer owns the pre-hardware decision: max safe EV sessions, first-risk threshold, storage bridge, transformer upgrade target, and strategy envelope.
-- The grid-signal module owns public-data readiness: deterministic demo data today, provider-compatible contracts for EPİAŞ, ENTSO-E, Electricity Maps, and Ember later.
+- The grid-signal module owns public-data readiness: deterministic demo data today, provider-compatible contracts for EPIAS, ENTSO-E, Electricity Maps, and Ember later.
 - The telemetry module owns measured-vs-simulated comparison, mock sample generation, and CSV telemetry parsing.
 - The report module owns Markdown engineering report generation and is reused by the UI and `/api/report`.
 - The API layer is stateless and deterministic, which keeps the project easy to run from GitHub.

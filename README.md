@@ -1,10 +1,19 @@
 # VoltPilot
 
-Pre-hardware grid-readiness cockpit for EV charging, flexible building loads, transformer loading, virtual grid signals, telemetry validation, and engineering report generation.
+[![CI](https://github.com/emrefbulut/VoltPilot/actions/workflows/ci.yml/badge.svg)](https://github.com/emrefbulut/VoltPilot/actions/workflows/ci.yml)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![License](https://img.shields.io/badge/license-MIT-0f766e)
 
-![VoltPilot Readiness Passport](docs/assets/voltpilot-readiness-passport.svg)
+Pre-hardware grid-readiness cockpit for EV charging, transformer loading, battery dispatch, virtual grid signals, telemetry validation, and engineering report generation.
 
-VoltPilot is a software-first electrical and electronics engineering portfolio project. It runs without physical hardware, models small-facility scenarios, simulates flexible-load orchestration, estimates transformer loading, solves the maximum safe EV concurrency before hardware purchase, and validates simulated dispatch against mock or measured telemetry samples.
+![VoltPilot Project Preview](docs/assets/voltpilot-github-preview.svg)
+
+VoltPilot is a software-first electrical and electronics engineering portfolio project. It helps a facility answer a practical question before buying chargers, meters, batteries, or transformer upgrades:
+
+> How many EV charging sessions can this site support safely, where does electrical risk begin, and what is the next engineering action?
+
+The app runs without physical hardware, models small-facility scenarios, simulates flexible-load orchestration, estimates transformer loading, solves the maximum safe EV concurrency before hardware purchase, and validates simulated dispatch against mock or measured telemetry samples.
 
 ## Why It Matters
 
@@ -26,6 +35,13 @@ The answer is packaged as a **Readiness Passport**:
 - Transformer upgrade target: recommends the next standard kVA rating when the requested plan exceeds the envelope.
 - Control-mode envelope: compares uncontrolled, tariff-aware, orchestrated, and optimizer strategies on the same facility.
 - Exportable proof: JSON, CSV, Markdown report, and UI all use the same tested scenario model.
+
+## What It Proves
+
+- Pre-installation EV capacity can be estimated without buying hardware first.
+- Transformer risk can be translated into a practical decision: install as-is, apply a managed charging policy, add a battery bridge, or plan an upgrade.
+- Simulated scenarios and measured telemetry can be compared with the same public API contract.
+- A portfolio energy project can show electrical engineering reasoning, software delivery, test coverage, and product thinking in one repository.
 
 ```mermaid
 flowchart LR
@@ -52,7 +68,7 @@ flowchart LR
 - Strategy comparison for uncontrolled, tariff-aware, orchestrated, and constraint-optimized operation
 - Lightweight optimizer for peak shaving, tariff exposure, battery SoC, and transformer headroom
 - `/api/grid-signal` virtual grid signal API
-- EPİAŞ, ENTSO-E, Electricity Maps, and Ember adapter-ready provider model
+- EPIAS, ENTSO-E, Electricity Maps, and Ember adapter-ready provider model
 - Source status panel with credential names, refresh notes, granularity, and documentation links
 - `/api/scenario` JSON and CSV export
 - `/api/telemetry` measured-vs-simulated comparison API
@@ -61,17 +77,25 @@ flowchart LR
 - Vitest coverage for the simulation engine, telemetry, CSV, grid signal, and API behavior
 - GitHub Actions CI for test, typecheck, lint, and build
 
+## Demo Flow
+
+1. Select a facility profile, EV count, tariff plan, battery mode, and control strategy.
+2. Check the Readiness Passport for max safe EV sessions, first-risk threshold, storage bridge, and transformer upgrade recommendation.
+3. Compare uncontrolled, tariff-aware, orchestrated, and optimizer strategies.
+4. Import telemetry CSV or use mock telemetry to compare measured-vs-simulated behavior.
+5. Export JSON, CSV, or a Markdown engineering report for documentation.
+
 ## Virtual Data Approach
 
 The project starts with virtual data instead of physical measurement hardware:
 
-- EPİAŞ Transparency Platform is modeled as the primary official adapter target for Turkish market, generation, consumption, and transmission data.
+- EPIAS Transparency Platform is modeled as the primary official adapter target for Turkish market, generation, consumption, and transmission data.
 - ENTSO-E Transparency Platform is kept as an alternative adapter target for European power-system data.
 - Electricity Maps is modeled as an optional adapter for carbon intensity, electricity mix, load, and price signals.
 - Ember is modeled as an optional adapter for monthly and yearly demand, generation, emissions, and carbon-intensity datasets.
 - If no API keys are configured, the app generates deterministic 24-hour demo data for Turkey. The demo stays reliable and the tests do not depend on the internet.
 
-Sources: [EPİAŞ technical documentation](https://seffaflik-prp.epias.com.tr/electricity-service/technical/tr/index.html), [ENTSO-E Transparency Platform](https://transparency.entsoe.eu/), [Electricity Maps API](https://portal.electricitymaps.com/docs/api), [Ember API](https://ember-energy.org/data/api/).
+Sources: [EPIAS technical documentation](https://seffaflik-prp.epias.com.tr/electricity-service/technical/tr/index.html), [ENTSO-E Transparency Platform](https://transparency.entsoe.eu/), [Electricity Maps API](https://portal.electricitymaps.com/docs/api), [Ember API](https://ember-energy.org/data/api/).
 
 ## Data Refresh Notes
 
@@ -79,7 +103,7 @@ VoltPilot does not currently poll live external APIs. The default grid signal is
 
 When live adapters are implemented, refresh behavior should be provider- and dataset-specific:
 
-- EPİAŞ: Official Turkish market and transparency datasets are published through EPİAŞ services; refresh cadence depends on the selected dataset and market process.
+- EPIAS: Official Turkish market and transparency datasets are published through EPIAS services; refresh cadence depends on the selected dataset and market process.
 - ENTSO-E: Transparency Platform data is exposed through multiple channels, including REST API and file/subscription workflows; publication timing and resolution depend on the data item.
 - Electricity Maps: API endpoints default to hourly temporal granularity and can support 5-minute, 15-minute, hourly, and aggregated historical granularities where available.
 - Ember: Monthly Electricity Data is updated twice per month, with releases in the first and third weeks of the month.
@@ -200,6 +224,7 @@ EMBER_API_KEY=
 - `src/lib/energy/report.ts` - report generation core
 - `tests` - model, telemetry, CSV, grid signal, and API tests
 - `docs` - architecture, telemetry, validation, API, virtual-data, and roadmap notes
+- `docs/LINKEDIN_POST.md` - LinkedIn launch copy and visual notes
 
 ## License
 

@@ -62,12 +62,12 @@ export const flexgridGridProviders: Array<{
   },
   {
     id: "epias",
-    label: "EPİAŞ Transparency",
+    label: "EPIAS Transparency",
     description: "Official adapter target for Turkish market, generation, consumption, and transmission data.",
     sourceUrl: "https://seffaflik-prp.epias.com.tr/electricity-service/technical/tr/index.html",
     requiresCredential: true,
     credentialEnvName: "EPIAS_TGT",
-    refreshCadence: "Dataset-specific according to EPİAŞ market and transparency publication processes",
+    refreshCadence: "Dataset-specific according to EPIAS market and transparency publication processes",
     granularity: "Usually hourly or market-period based, depending on endpoint",
     adapterStatus: "source"
   },

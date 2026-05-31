@@ -29,7 +29,7 @@ export const flexgridCopy = {
       week: "Module 4",
       title: "Grid signal and report",
       description:
-        "EPİAŞ, ENTSO-E, Electricity Maps, and Ember source metadata, grid signal, CSV, JSON, and Markdown report output."
+        "EPIAS, ENTSO-E, Electricity Maps, and Ember source metadata, grid signal, CSV, JSON, and Markdown report output."
     }
   ]
 } as const;

@@ -78,7 +78,7 @@ export function FlexgridPage() {
               Grid signals are selectable, traceable, and connected to the decision screen.
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              EPİAŞ, ENTSO-E, Electricity Maps, Ember, and local virtual data use the same format; source, credential,
+              EPIAS, ENTSO-E, Electricity Maps, Ember, and local virtual data use the same format; source, credential,
               refresh cadence, and granularity are shown openly.
             </p>
           </div>
