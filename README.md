@@ -201,14 +201,6 @@ EMBER_API_KEY=
 - `tests` - model, telemetry, CSV, grid signal, and API tests
 - `docs` - architecture, telemetry, validation, API, virtual-data, and roadmap notes
 
-## Suggested GitHub Description
-
-Pre-hardware grid-readiness cockpit for EV charging, transformer risk, battery dispatch, virtual grid signals, and telemetry validation.
-
-## Suggested Topics
-
-`nextjs`, `typescript`, `energy`, `smart-grid`, `demand-response`, `ev-charging`, `power-systems`, `telemetry`, `recharts`, `turkey`
-
 ## License
 
 MIT. Copyright (c) 2026 Emre Bulut.
