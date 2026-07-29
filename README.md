@@ -67,8 +67,8 @@ flowchart LR
 - EV capacity envelope across uncontrolled, tariff-aware, orchestrated, and optimizer strategies
 - Strategy comparison for uncontrolled, tariff-aware, orchestrated, and constraint-optimized operation
 - Lightweight optimizer for peak shaving, tariff exposure, battery SoC, and transformer headroom
-- `/api/grid-signal` virtual grid signal API
-- EPIAS, ENTSO-E, Electricity Maps, and Ember adapter-ready provider model
+- `/api/grid-signal` grid signal API with a working ENTSO-E live adapter
+- Per-field `fieldSources` reporting so measured and modeled values are never conflated
 - Source status panel with credential names, refresh notes, granularity, and documentation links
 - `/api/scenario` JSON and CSV export
 - `/api/telemetry` measured-vs-simulated comparison API
@@ -85,23 +85,43 @@ flowchart LR
 4. Import telemetry CSV or use mock telemetry to compare measured-vs-simulated behavior.
 5. Export JSON, CSV, or a Markdown engineering report for documentation.
 
-## Virtual Data Approach
+## Data Sources
 
-The project starts with virtual data instead of physical measurement hardware:
+VoltPilot runs on modeled data by default and upgrades individual fields to
+measured data when a provider adapter and its credential are both available.
 
-- EPIAS Transparency Platform is modeled as the primary official adapter target for Turkish market, generation, consumption, and transmission data.
-- ENTSO-E Transparency Platform is kept as an alternative adapter target for European power-system data.
-- Electricity Maps is modeled as an optional adapter for carbon intensity, electricity mix, load, and price signals.
-- Ember is modeled as an optional adapter for monthly and yearly demand, generation, emissions, and carbon-intensity datasets.
-- If no API keys are configured, the app generates deterministic 24-hour demo data for Turkey. The demo stays reliable and the tests do not depend on the internet.
+**Implemented — ENTSO-E Transparency Platform.** Set `ENTSOE_TOKEN` and request
+`/api/grid-signal?provider=entsoe`. The adapter fetches two series for the
+selected Turkish market day and merges them onto the 24-hour signal:
+
+| Field | Source with `ENTSOE_TOKEN` set |
+| :--- | :--- |
+| `loadMw` | measured — ENTSO-E A65, system total load (realised) |
+| `marketPriceTlMwh` | measured — ENTSO-E A44, day-ahead prices |
+| `renewableSharePct` | modeled — not published as a single series |
+| `carbonIntensityGco2Kwh` | modeled — not published as a single series |
+
+Every response carries a `fieldSources` object stating which of the four fields
+was measured and which stayed modeled, so a "live" response never implies more
+than it delivers. Hours the platform has not published yet keep their modeled
+value, and any upstream failure returns the modeled signal with
+`status: "fallback"` plus the reason — the endpoint contract holds either way.
+
+**Documented targets, not implemented.** EPIAS, Electricity Maps and Ember appear
+in the provider list with their credential names, cadence and granularity, but
+have no adapter yet; selecting them returns modeled data. Their
+`adapterStatus` is `"source"`, while ENTSO-E is `"live"`.
+
+Without any credential the app generates deterministic 24-hour data for Turkey,
+so every run is reproducible and the tests never touch the network.
 
 Sources: [EPIAS technical documentation](https://seffaflik-prp.epias.com.tr/electricity-service/technical/tr/index.html), [ENTSO-E Transparency Platform](https://transparency.entsoe.eu/), [Electricity Maps API](https://portal.electricitymaps.com/docs/api), [Ember API](https://ember-energy.org/data/api/).
 
 ## Data Refresh Notes
 
-VoltPilot does not currently poll live external APIs. The default grid signal is deterministic virtual data generated for the requested date, so every run is reproducible and CI-safe.
+The default grid signal is deterministic data generated for the requested date, so every run is reproducible and CI-safe. The ENTSO-E adapter fetches on request with a 10-second timeout and no caching layer; add one before pointing a dashboard at it with a short poll interval.
 
-When live adapters are implemented, refresh behavior should be provider- and dataset-specific:
+For the adapters that are still documented targets, refresh behavior should be provider- and dataset-specific:
 
 - EPIAS: Official Turkish market and transparency datasets are published through EPIAS services; refresh cadence depends on the selected dataset and market process.
 - ENTSO-E: Transparency Platform data is exposed through multiple channels, including REST API and file/subscription workflows; publication timing and resolution depend on the data item.
@@ -219,7 +239,8 @@ EMBER_API_KEY=
 - `app/api/report/route.ts` - Markdown engineering report export
 - `components/energy` - cockpit UI and dashboard panels
 - `src/lib/energy/flexgrid.ts` - simulation engine
-- `src/lib/energy/grid-signal.ts` - virtual grid signal core
+- `src/lib/energy/grid-signal.ts` - grid signal core and live/modeled merge
+- `src/lib/energy/providers/entsoe.ts` - ENTSO-E Transparency Platform adapter
 - `src/lib/energy/telemetry.ts` - measured-vs-simulated comparison core
 - `src/lib/energy/report.ts` - report generation core
 - `tests` - model, telemetry, CSV, grid signal, and API tests

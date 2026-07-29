@@ -27,6 +27,23 @@ export type FlexgridGridSignalSummary = {
   dispatchAdvice: string;
 };
 
+/**
+ * Where each field actually came from.
+ *
+ * A provider can serve some fields live and leave others modeled - ENTSO-E, for
+ * example, publishes load and day-ahead price but not a single carbon-intensity
+ * series. Exposing this per field keeps the API from implying that everything in
+ * a "live" response was measured.
+ */
+export type FlexgridFieldSource = "live" | "modeled";
+
+export type FlexgridGridSignalFieldSources = {
+  loadMw: FlexgridFieldSource;
+  marketPriceTlMwh: FlexgridFieldSource;
+  renewableSharePct: FlexgridFieldSource;
+  carbonIntensityGco2Kwh: FlexgridFieldSource;
+};
+
 export type FlexgridGridSignal = {
   provider: FlexgridGridProvider;
   sourceLabel: string;
@@ -35,6 +52,7 @@ export type FlexgridGridSignal = {
   updatedAt: string;
   points: FlexgridGridSignalPoint[];
   summary: FlexgridGridSignalSummary;
+  fieldSources: FlexgridGridSignalFieldSources;
   integrationNotes: string[];
 };
 
@@ -47,7 +65,10 @@ export const flexgridGridProviders: Array<{
   credentialEnvName: string | null;
   refreshCadence: string;
   granularity: string;
-  adapterStatus: "local" | "source";
+  // "local"  -> generated in-process, no network call
+  // "live"   -> a real adapter exists and runs when the credential is present
+  // "source" -> documented target, no adapter written yet
+  adapterStatus: "local" | "live" | "source";
 }> = [
   {
     id: "demo",
@@ -80,7 +101,7 @@ export const flexgridGridProviders: Array<{
     credentialEnvName: "ENTSOE_TOKEN",
     refreshCadence: "Dataset-specific publication timing by transparency data item",
     granularity: "MTU-dependent, commonly 15, 30, or 60 minute electricity-market periods",
-    adapterStatus: "source"
+    adapterStatus: "live"
   },
   {
     id: "electricity-maps",
@@ -233,6 +254,12 @@ export function buildDemoGridSignal(input: FlexgridGridSignalInput = {}): Flexgr
           ? "Reschedule EV charging and battery discharge around the high-risk grid hours."
           : "Grid risk is low; move flexible loads toward low-price and low-carbon hours."
     },
+    fieldSources: {
+      loadMw: "modeled",
+      marketPriceTlMwh: "modeled",
+      renewableSharePct: "modeled",
+      carbonIntensityGco2Kwh: "modeled"
+    },
     integrationNotes:
       provider === "demo"
         ? ["This is deterministic virtual data; it does not require physical hardware or an API key."]
@@ -240,5 +267,84 @@ export function buildDemoGridSignal(input: FlexgridGridSignalInput = {}): Flexgr
             `${sourceLabelForProvider(provider)} is selected; virtual fallback data is used with the same schema until credentials are configured.`,
             "The endpoint contract stays stable when a live adapter is added."
           ]
+  };
+}
+
+function summarize(points: FlexgridGridSignalPoint[]): FlexgridGridSignalSummary {
+  const peakPoint = points.reduce((peak, point) => (point.loadMw > peak.loadMw ? point : peak), points[0]!);
+  const highRiskHours = points.filter((point) => point.demandRisk === "high").length;
+
+  return {
+    averagePriceTlMwh: round(average(points.map((point) => point.marketPriceTlMwh)), 0),
+    peakLoadMw: peakPoint.loadMw,
+    peakHour: peakPoint.hour,
+    renewableSharePct: round(average(points.map((point) => point.renewableSharePct)), 0),
+    carbonIntensityGco2Kwh: round(average(points.map((point) => point.carbonIntensityGco2Kwh)), 0),
+    highRiskHours,
+    dispatchAdvice:
+      highRiskHours > 0
+        ? "Reschedule EV charging and battery discharge around the high-risk grid hours."
+        : "Grid risk is low; move flexible loads toward low-price and low-carbon hours."
+  };
+}
+
+/**
+ * Overlays measured hourly series onto the modeled baseline.
+ *
+ * Any hour a provider did not publish keeps its modeled value, so the 24-point
+ * contract never develops holes. A field is only reported as `live` when at
+ * least one real hour came back for it.
+ */
+export function applyLiveGridSeries(
+  baseline: FlexgridGridSignal,
+  live: {
+    loadMw?: Array<number | null>;
+    marketPriceTlMwh?: Array<number | null>;
+  }
+): FlexgridGridSignal {
+  const loadIsLive = (live.loadMw ?? []).some((value) => typeof value === "number");
+  const priceIsLive = (live.marketPriceTlMwh ?? []).some((value) => typeof value === "number");
+
+  if (!loadIsLive && !priceIsLive) {
+    return baseline;
+  }
+
+  const points = baseline.points.map((point, hour): FlexgridGridSignalPoint => {
+    const measuredLoad = live.loadMw?.[hour];
+    const measuredPrice = live.marketPriceTlMwh?.[hour];
+    const loadMw = typeof measuredLoad === "number" ? round(measuredLoad, 0) : point.loadMw;
+    const marketPriceTlMwh =
+      typeof measuredPrice === "number" ? round(measuredPrice, 0) : point.marketPriceTlMwh;
+
+    return {
+      ...point,
+      loadMw,
+      marketPriceTlMwh,
+      demandRisk: demandRisk(loadMw, marketPriceTlMwh, point.carbonIntensityGco2Kwh)
+    };
+  });
+
+  const measuredFields = [
+    loadIsLive ? "system load" : null,
+    priceIsLive ? "day-ahead price" : null
+  ].filter(Boolean);
+
+  return {
+    ...baseline,
+    status: "live",
+    updatedAt: new Date().toISOString(),
+    points,
+    summary: summarize(points),
+    fieldSources: {
+      loadMw: loadIsLive ? "live" : "modeled",
+      marketPriceTlMwh: priceIsLive ? "live" : "modeled",
+      renewableSharePct: "modeled",
+      carbonIntensityGco2Kwh: "modeled"
+    },
+    integrationNotes: [
+      `Measured from ${baseline.sourceLabel}: ${measuredFields.join(" and ")}.`,
+      "Renewable share and carbon intensity are not published as single series by this provider, so they remain modeled. See fieldSources.",
+      "Hours the provider had not published yet keep their modeled value."
+    ]
   };
 }
