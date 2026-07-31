@@ -15,33 +15,27 @@ VoltPilot is a software-first electrical and electronics engineering portfolio p
 
 The app runs without physical hardware, models small-facility scenarios, simulates flexible-load orchestration, estimates transformer loading, solves the maximum safe EV concurrency before hardware purchase, and validates simulated dispatch against mock or measured telemetry samples.
 
-## Why It Matters
+## The problem
 
-EV charging, cooling demand, and small distributed resources make local grid flexibility more valuable. Many small facilities do not have a practical way to estimate transformer stress, flexible-load potential, or whether a control strategy will create measurable value.
+Most energy tools monitor installed hardware or optimise chargers already in the
+ground. VoltPilot addresses the decision that comes *before* the purchase order:
 
-VoltPilot demonstrates that workflow in software first. It works today without hardware, but its telemetry and public-data contracts can later be connected to ESP32, MQTT, smart-plug data, or live grid-data providers.
-
-## Core Differentiator
-
-Most energy tools focus on monitoring, general optimization, or operating installed EV chargers. VoltPilot focuses on the decision before hardware is purchased:
-
-> How many EV charging sessions can this facility support safely, where does transformer risk begin, and should the next move be a charging policy, a battery bridge, or a transformer upgrade?
+> How many EV charging sessions can this facility support safely, where does
+> transformer risk begin, and should the next move be a charging policy, a
+> battery bridge, or a transformer upgrade?
 
 The answer is packaged as a **Readiness Passport**:
 
-- Max Safe EV Solver: estimates the largest EV concurrency that stays inside transformer kVA and overload limits.
-- First-risk threshold: shows the EV count where the facility leaves the safe pre-hardware envelope.
-- Storage bridge estimate: approximates the battery energy needed to hold the requested plan inside the managed stress band.
-- Transformer upgrade target: recommends the next standard kVA rating when the requested plan exceeds the envelope.
-- Control-mode envelope: compares uncontrolled, tariff-aware, orchestrated, and optimizer strategies on the same facility.
-- Exportable proof: JSON, CSV, Markdown report, and UI all use the same tested scenario model.
+| Output | What it answers |
+| :--- | :--- |
+| **Max Safe EV Solver** | Largest EV concurrency that stays inside transformer kVA and overload limits |
+| **First-risk threshold** | The EV count at which the site leaves the safe envelope |
+| **Storage bridge estimate** | Battery energy needed to hold the requested plan inside the managed stress band |
+| **Transformer upgrade target** | Next standard kVA rating when the plan exceeds the envelope |
+| **Control-mode envelope** | Uncontrolled, tariff-aware, orchestrated, and optimizer strategies on the same facility |
 
-## What It Proves
-
-- Pre-installation EV capacity can be estimated without buying hardware first.
-- Transformer risk can be translated into a practical decision: install as-is, apply a managed charging policy, add a battery bridge, or plan an upgrade.
-- Simulated scenarios and measured telemetry can be compared with the same public API contract.
-- A portfolio energy project can show electrical engineering reasoning, software delivery, test coverage, and product thinking in one repository.
+The UI, JSON, CSV, and Markdown report all read from the same tested scenario
+model, so an exported figure and an on-screen figure cannot drift apart.
 
 ```mermaid
 flowchart LR
@@ -55,27 +49,63 @@ flowchart LR
   C --> I["Battery bridge or transformer upgrade"]
 ```
 
-## Completed Features
+## Architecture
 
-- English dashboard and operator cockpit
-- Facility profiles for apartment blocks, workshops, cafes, and electronics labs
-- EV concurrency, tariff plan, control strategy, storage, analysis horizon, and scenario preset controls
-- URL-shareable scenarios and browser-local saved scenarios
-- 24-hour or 7-day load profile with uncontrolled baseline, mock/imported telemetry, and transformer limit
-- kW, kVA, current, power factor, overload-hour, battery SoC, cost, carbon, and engineering-confidence KPIs
-- Readiness Passport with max safe EV sessions, first-risk threshold, storage bridge estimate, and transformer upgrade target
-- EV capacity envelope across uncontrolled, tariff-aware, orchestrated, and optimizer strategies
-- Strategy comparison for uncontrolled, tariff-aware, orchestrated, and constraint-optimized operation
-- Lightweight optimizer for peak shaving, tariff exposure, battery SoC, and transformer headroom
-- `/api/grid-signal` virtual grid signal API
-- EPIAS, ENTSO-E, Electricity Maps, and Ember adapter-ready provider model
-- Source status panel with credential names, refresh notes, granularity, and documentation links
-- `/api/scenario` JSON and CSV export
-- `/api/telemetry` measured-vs-simulated comparison API
-- Telemetry CSV import in the cockpit with template download
-- `/api/report` downloadable Markdown engineering report
-- Vitest coverage for the simulation engine, telemetry, CSV, grid signal, and API behavior
-- GitHub Actions CI for test, typecheck, lint, and build
+```mermaid
+flowchart TD
+    subgraph UI["Cockpit"]
+        P["Scenario controls"]
+        Q["Charts · KPIs · Readiness Passport"]
+        R["Telemetry CSV import"]
+    end
+
+    subgraph Engine["src/lib/energy"]
+        S["flexgrid.ts<br/>simulation engine"]
+        T["grid-signal.ts<br/>live / modeled merge"]
+        U["telemetry.ts<br/>measured vs simulated"]
+        V["report.ts"]
+    end
+
+    subgraph API["app/api"]
+        W["/scenario<br/>JSON · CSV"]
+        X["/grid-signal"]
+        Y["/telemetry"]
+        Z["/report"]
+    end
+
+    P --> S
+    R --> U
+    S --> Q
+    S --> W
+    T --> X
+    U --> Y
+    V --> Z
+    X -.->|"ENTSOE_TOKEN set"| AA["ENTSO-E<br/>Transparency Platform"]
+
+    S -.-> V
+    T --> S
+```
+
+The engine is a pure module with no React or network dependency, which is what
+lets the same code back the UI, four API routes, and the test suite.
+
+## Capabilities
+
+| Area | What is implemented |
+| :--- | :--- |
+| **Facility profiles** | Apartment blocks, workshops, cafes, electronics labs |
+| **Scenario controls** | EV concurrency, tariff plan, control strategy, storage mode, analysis horizon, presets |
+| **Horizons** | 24-hour or 7-day load profile with uncontrolled baseline and transformer limit overlay |
+| **Electrical outputs** | kW, kVA, estimated current, power factor, overload hours, battery SoC |
+| **Economics** | Tariff-aware cost, carbon, and engineering-confidence indicators |
+| **Readiness Passport** | Max safe EV sessions, first-risk threshold, storage bridge, transformer upgrade target |
+| **Strategy comparison** | Uncontrolled, tariff-aware, orchestrated, constraint-optimized |
+| **Optimizer** | Peak shaving, tariff exposure, battery SoC, transformer headroom |
+| **Grid data** | `/api/grid-signal` with a working ENTSO-E adapter and per-field `fieldSources` |
+| **Telemetry** | CSV import with template download, measured-vs-simulated comparison via `/api/telemetry` |
+| **Exports** | JSON, CSV, and a downloadable Markdown engineering report |
+| **Sharing** | URL-encoded scenarios and browser-local saved scenarios |
+| **Verification** | Vitest suite over engine, telemetry, CSV, grid signal, and API routes; CI on every push |
 
 ## Demo Flow
 
@@ -85,23 +115,43 @@ flowchart LR
 4. Import telemetry CSV or use mock telemetry to compare measured-vs-simulated behavior.
 5. Export JSON, CSV, or a Markdown engineering report for documentation.
 
-## Virtual Data Approach
+## Data Sources
 
-The project starts with virtual data instead of physical measurement hardware:
+VoltPilot runs on modeled data by default and upgrades individual fields to
+measured data when a provider adapter and its credential are both available.
 
-- EPIAS Transparency Platform is modeled as the primary official adapter target for Turkish market, generation, consumption, and transmission data.
-- ENTSO-E Transparency Platform is kept as an alternative adapter target for European power-system data.
-- Electricity Maps is modeled as an optional adapter for carbon intensity, electricity mix, load, and price signals.
-- Ember is modeled as an optional adapter for monthly and yearly demand, generation, emissions, and carbon-intensity datasets.
-- If no API keys are configured, the app generates deterministic 24-hour demo data for Turkey. The demo stays reliable and the tests do not depend on the internet.
+**Implemented — ENTSO-E Transparency Platform.** Set `ENTSOE_TOKEN` and request
+`/api/grid-signal?provider=entsoe`. The adapter fetches two series for the
+selected Turkish market day and merges them onto the 24-hour signal:
+
+| Field | Source with `ENTSOE_TOKEN` set |
+| :--- | :--- |
+| `loadMw` | measured — ENTSO-E A65, system total load (realised) |
+| `marketPriceTlMwh` | measured — ENTSO-E A44, day-ahead prices |
+| `renewableSharePct` | modeled — not published as a single series |
+| `carbonIntensityGco2Kwh` | modeled — not published as a single series |
+
+Every response carries a `fieldSources` object stating which of the four fields
+was measured and which stayed modeled, so a "live" response never implies more
+than it delivers. Hours the platform has not published yet keep their modeled
+value, and any upstream failure returns the modeled signal with
+`status: "fallback"` plus the reason — the endpoint contract holds either way.
+
+**Documented targets, not implemented.** EPIAS, Electricity Maps and Ember appear
+in the provider list with their credential names, cadence and granularity, but
+have no adapter yet; selecting them returns modeled data. Their
+`adapterStatus` is `"source"`, while ENTSO-E is `"live"`.
+
+Without any credential the app generates deterministic 24-hour data for Turkey,
+so every run is reproducible and the tests never touch the network.
 
 Sources: [EPIAS technical documentation](https://seffaflik-prp.epias.com.tr/electricity-service/technical/tr/index.html), [ENTSO-E Transparency Platform](https://transparency.entsoe.eu/), [Electricity Maps API](https://portal.electricitymaps.com/docs/api), [Ember API](https://ember-energy.org/data/api/).
 
 ## Data Refresh Notes
 
-VoltPilot does not currently poll live external APIs. The default grid signal is deterministic virtual data generated for the requested date, so every run is reproducible and CI-safe.
+The default grid signal is deterministic data generated for the requested date, so every run is reproducible and CI-safe. The ENTSO-E adapter fetches on request with a 10-second timeout and no caching layer; add one before pointing a dashboard at it with a short poll interval.
 
-When live adapters are implemented, refresh behavior should be provider- and dataset-specific:
+For the adapters that are still documented targets, refresh behavior should be provider- and dataset-specific:
 
 - EPIAS: Official Turkish market and transparency datasets are published through EPIAS services; refresh cadence depends on the selected dataset and market process.
 - ENTSO-E: Transparency Platform data is exposed through multiple channels, including REST API and file/subscription workflows; publication timing and resolution depend on the data item.
@@ -202,11 +252,17 @@ Engineering report:
 
 ## Environment Variables
 
-The app works without these values. If credentials are added later, live adapters can be implemented while keeping the same API contract.
+The app runs fully without any of these. Only `ENTSOE_TOKEN` currently changes
+behaviour — the other three are documented adapter targets with no implementation
+yet, and setting them has no effect today.
 
 ```env
-EPIAS_TGT=
+# Implemented. With this set, /api/grid-signal?provider=entsoe returns measured
+# system load and day-ahead price. Free registration at transparency.entsoe.eu.
 ENTSOE_TOKEN=
+
+# Documented targets, not implemented.
+EPIAS_TGT=
 ELECTRICITY_MAPS_TOKEN=
 EMBER_API_KEY=
 ```
@@ -219,7 +275,8 @@ EMBER_API_KEY=
 - `app/api/report/route.ts` - Markdown engineering report export
 - `components/energy` - cockpit UI and dashboard panels
 - `src/lib/energy/flexgrid.ts` - simulation engine
-- `src/lib/energy/grid-signal.ts` - virtual grid signal core
+- `src/lib/energy/grid-signal.ts` - grid signal core and live/modeled merge
+- `src/lib/energy/providers/entsoe.ts` - ENTSO-E Transparency Platform adapter
 - `src/lib/energy/telemetry.ts` - measured-vs-simulated comparison core
 - `src/lib/energy/report.ts` - report generation core
 - `tests` - model, telemetry, CSV, grid signal, and API tests
